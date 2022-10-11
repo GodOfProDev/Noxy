@@ -165,20 +165,11 @@ public class ApiUtil {
 
     public Request newHypixelApiRequest(String apiPath) {
         return newAnonymousHypixelApiRequest(apiPath)
-                .queryArgument("key", "API");
+                .queryArgument("key", Noxy.INSTANCE.getConfig().getApiKey());
     }
 
     public Request newAnonymousHypixelApiRequest(String apiPath) {
         return new Request()
                 .url("https://api.hypixel.net/" + apiPath);
-    }
-
-    public Request newMoulberryRequest(String path) {
-        return new Request()
-                .url(getMyApiURL() + path);
-    }
-
-    private String getMyApiURL() {
-        return String.format("https://%s/", "API");
     }
 }

@@ -47,6 +47,7 @@ sourceSets.main {
 // Dependencies:
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven("https://repo.spongepowered.org/maven/")
     // If you don't want to log in with your real minecraft account, remove this line
@@ -62,7 +63,13 @@ dependencies {
     minecraft("com.mojang:minecraft:1.8.9")
     mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")
     forge("net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9")
-    implementation("gg.essential:elementa-1.8.9-forge:554")
+    //shadowImpl("gg.essential:elementa-1.8.9-forge:554")
+    //shadowImpl("gg.essential:vigilance-1.8.9-forge:258")
+
+    shadowImpl("gg.essential:loader-launchwrapper:1.1.3")
+    shadowImpl("gg.essential:essential-1.8.9-forge:2581") {
+        exclude(module = "gson")
+    }
 
     // If you don't want mixins, remove these lines
     shadowImpl("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
@@ -72,7 +79,9 @@ dependencies {
 
     // If you don't want to log in with your real minecraft account, remove this line
     runtimeOnly("me.djtheredstoner:DevAuth-forge-legacy:1.1.0")
-    implementation(kotlin("stdlib-jdk8"))
+    shadowImpl(kotlin("stdlib-jdk8"))
+    shadowImpl(kotlin("reflect"))
+    shadowImpl(kotlin("stdlib"))
 
 }
 
@@ -83,7 +92,7 @@ tasks.withType(JavaCompile::class) {
 }
 
 tasks.withType(Jar::class) {
-    archiveBaseName.set("noxy")
+    archiveBaseName.set("Noxy")
     manifest.attributes.run {
         this["FMLCorePluginContainsFMLMod"] = "true"
         this["ForceLoadAsMod"] = "true"
@@ -112,8 +121,11 @@ tasks.shadowJar {
 
     // If you want to include other dependencies and shadow them, you can relocate them in here
     fun relocate(name: String) = relocate(name, "me.godofpro.noxy.deps.$name")
-    relocate("gg.essential.elementa", "me.godofpro.noxy.elementa")
-    relocate("gg.essential.universalcraft", "me.godofpro.noxy.universalcraft")
+    //relocate("gg.essential.vigilance", "vigilance")
+    //relocate("gg.essential.elementa", "elemnta")
+    //relocate("gg.essential.universalcraft", "universalcraft")
+    relocate("gg.essential.essential", "essential")
+    relocate("gg.essential.loader-launchwrapper", "loader-launchwrapper")
 }
 
 tasks.assemble.get().dependsOn(tasks.remapJar)
