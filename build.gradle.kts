@@ -3,10 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     idea
     java
+    kotlin("jvm") version "1.7.20"
     id("gg.essential.loom") version "0.10.0.+"
     id("dev.architectury.architectury-pack200") version "0.1.3"
     id("com.github.johnrengelman.shadow") version "7.1.2"
-    kotlin("jvm") version "1.7.20"
 }
 
 group = "me.godofpro.noxy"
@@ -25,7 +25,9 @@ loom {
             // If you don't want mixins, remove these lines
             property("mixin.debug", "true")
             property("asmhelper.verbose", "true")
-            arg("--tweakClass", "org.spongepowered.asm.launch.MixinTweaker")
+            property("elementa.dev", "true")
+            property("elementa.invalid_usage", "warn")
+            arg("--tweakClass", "gg.essential.loader.stage0.EssentialSetupTweaker")
             arg("--mixin", "mixins.noxy.json")
         }
     }
@@ -47,12 +49,11 @@ sourceSets.main {
 // Dependencies:
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven("https://repo.spongepowered.org/maven/")
+    maven("https://repo.essential.gg/repository/maven-public/")
     // If you don't want to log in with your real minecraft account, remove this line
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
-    maven(url = "https://repo.essential.gg/repository/maven-public")
 }
 
 val shadowImpl: Configuration by configurations.creating {
@@ -63,13 +64,9 @@ dependencies {
     minecraft("com.mojang:minecraft:1.8.9")
     mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")
     forge("net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9")
-    //shadowImpl("gg.essential:elementa-1.8.9-forge:554")
-    //shadowImpl("gg.essential:vigilance-1.8.9-forge:258")
 
     shadowImpl("gg.essential:loader-launchwrapper:1.1.3")
-    shadowImpl("gg.essential:essential-1.8.9-forge:2581") {
-        exclude(module = "gson")
-    }
+    implementation("gg.essential:essential-1.8.9-forge:5155+gf6c1d3696")
 
     // If you don't want mixins, remove these lines
     shadowImpl("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
@@ -79,9 +76,6 @@ dependencies {
 
     // If you don't want to log in with your real minecraft account, remove this line
     runtimeOnly("me.djtheredstoner:DevAuth-forge-legacy:1.1.0")
-    shadowImpl(kotlin("stdlib-jdk8"))
-    shadowImpl(kotlin("reflect"))
-    shadowImpl(kotlin("stdlib"))
 
 }
 
@@ -92,13 +86,13 @@ tasks.withType(JavaCompile::class) {
 }
 
 tasks.withType(Jar::class) {
-    archiveBaseName.set("Noxy")
+    archiveBaseName.set("noxy")
     manifest.attributes.run {
         this["FMLCorePluginContainsFMLMod"] = "true"
         this["ForceLoadAsMod"] = "true"
 
         // If you don't want mixins, remove these lines
-        this["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
+        this["TweakClass"] = "gg.essential.loader.stage0.EssentialSetupTweaker"
         this["MixinConfigs"] = "mixins.noxy.json"
     }
 }
@@ -121,20 +115,23 @@ tasks.shadowJar {
 
     // If you want to include other dependencies and shadow them, you can relocate them in here
     fun relocate(name: String) = relocate(name, "me.godofpro.noxy.deps.$name")
-    //relocate("gg.essential.vigilance", "vigilance")
-    //relocate("gg.essential.elementa", "elemnta")
-    //relocate("gg.essential.universalcraft", "universalcraft")
-    relocate("gg.essential.essential", "essential")
-    relocate("gg.essential.loader-launchwrapper", "loader-launchwrapper")
 }
 
 tasks.assemble.get().dependsOn(tasks.remapJar)
 
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "1.8"
+tasks.withType(KotlinCompile::class) {
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs =
+            listOf("-opt-in=kotlin.RequiresOptIn", "-Xjvm-default=all", "-Xbackend-threads=0")
+        languageVersion = "1.7"
+    }
+    kotlinDaemonJvmArguments.set(
+        listOf(
+            "-Xmx2G",
+            "-Dkotlin.enableCacheBuilding=true",
+            "-Dkotlin.useParallelTasks=true",
+            "-Dkotlin.enableFastIncremental=true"
+        )
+    )
 }

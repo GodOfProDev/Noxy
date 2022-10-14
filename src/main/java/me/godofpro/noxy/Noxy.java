@@ -1,10 +1,12 @@
 package me.godofpro.noxy;
 
+import gg.essential.elementa.markdown.MarkdownComponent;
 import me.godofpro.noxy.commands.ConfigCommand;
 import me.godofpro.noxy.commands.PrintAPI;
 import me.godofpro.noxy.core.Config;
 import me.godofpro.noxy.listeners.ChatListener;
 import gg.essential.api.utils.GuiUtil;
+import me.godofpro.noxy.listeners.RenderWorld;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -31,43 +33,17 @@ public class Noxy {
 
     private final Config config = Config.INSTANCE;
 
-    private GuiScreen displayScreen = null;
-
     public Config getConfig() {
         return this.config;
     }
 
-    public GuiScreen getDisplayScreen() {
-        return this.displayScreen;
-    }
-
-    public void setDisplayScreen(GuiScreen displayScreen) {
-        this.displayScreen = displayScreen;
-    }
-
     @Mod.EventHandler
-    public void preinit(FMLPreInitializationEvent event) {
+    public void preInit(FMLPreInitializationEvent event) {
         INSTANCE = this;
-
         ClientCommandHandler.instance.registerCommand(new ConfigCommand());
         ClientCommandHandler.instance.registerCommand(new PrintAPI());
         MinecraftForge.EVENT_BUS.register(new ChatListener());
         MinecraftForge.EVENT_BUS.register(this);
-    }
-
-    @SubscribeEvent
-    public void onTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.START) return;
-        if (Minecraft.getMinecraft().thePlayer == null) {
-            displayScreen = null;
-            return;
-        }
-        if (displayScreen != null) {
-            if (Minecraft.getMinecraft().thePlayer.openContainer != null) {
-                Minecraft.getMinecraft().thePlayer.closeScreen();
-            }
-            Minecraft.getMinecraft().displayGuiScreen(displayScreen);
-            displayScreen = null;
-        }
+        MinecraftForge.EVENT_BUS.register(new RenderWorld());
     }
 }
